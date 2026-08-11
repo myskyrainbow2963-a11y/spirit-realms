@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://csxlih28pby36"
+path="res://.godot/imported/Crimson Sky Duel.mp3-22783fd4d14d40098edad9ed3a2f37b8.mp3str"
+
+[deps]
+
+source_file="res://music/Crimson Sky Duel.mp3"
+dest_files=["res://.godot/imported/Crimson Sky Duel.mp3-22783fd4d14d40098edad9ed3a2f37b8.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

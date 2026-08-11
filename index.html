@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#122b2b" />
+  <title>四界灵契 · 幻想养成卡牌</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <button class="brand" data-action="home"><span class="brand-mark">契</span><span><b>四界灵契</b><small>SPIRIT REALMS</small></span></button>
+      <nav id="nav">
+        <button data-view="map">世界地图</button><button data-view="home">云栖小筑</button><button data-view="cards">灵契图鉴 <i id="card-count">0</i></button><button data-view="battle">竞技场</button>
+      </nav>
+      <div class="currency"><span>✦ <b id="dust">180</b></span><button class="sound" aria-label="声音">♫</button></div>
+    </header>
+    <main id="game"></main>
+    <div id="toast" role="status"></div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>

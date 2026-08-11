@@ -1,0 +1,19 @@
+# Godot generated project data
+.godot/
+*.tmp
+*.log
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local user data and exported builds
+user://
+exports/
+build/
+dist/
+
+# Local IDE settings
+.vscode/
+.idea/
