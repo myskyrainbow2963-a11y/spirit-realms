@@ -46,6 +46,7 @@ const CARD_ART_POOL := [
 	"res://picture/card65.png", "res://picture/card66.png", "res://picture/card67.png",
 	"res://picture/card68.png"
 ]
+const MAX_CARD_COLLECTION := 100
 
 const TALENT_RULES := {
 	"体力": {"key":"reflect", "label":"反弹", "min":20, "max":40, "unit":"%"},
@@ -82,6 +83,9 @@ static func complete_training_now() -> void:
 	hatch_reveal_pending = true
 
 static func reveal_hatched_card() -> Dictionary:
+	if hatched_cards.size() >= MAX_CARD_COLLECTION:
+		hatch_reveal_pending = false
+		return {"collection_full": true, "name": "灵契图鉴已满"}
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
 	var attack := rng.randi_range(18, 42)

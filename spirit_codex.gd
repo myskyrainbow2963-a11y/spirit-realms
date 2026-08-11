@@ -9,12 +9,16 @@ const NAV_HOME := Rect2(915, 14, 126, 52)
 const NAV_CARDS := Rect2(1050, 14, 144, 52)
 const NAV_BATTLE := Rect2(1205, 14, 130, 52)
 const GALLERY_BUTTON := Rect2(1640, 94, 210, 50)
+const PREV_PAGE_BUTTON := Rect2(1310, 94, 130, 50)
+const NEXT_PAGE_BUTTON := Rect2(1455, 94, 165, 50)
 const CARD_RECTS := [Rect2(112, 220, 226, 390), Rect2(372, 220, 226, 390), Rect2(632, 220, 226, 390), Rect2(892, 220, 226, 390), Rect2(1152, 220, 226, 390), Rect2(1412, 220, 226, 390), Rect2(242, 656, 226, 390), Rect2(502, 656, 226, 390), Rect2(762, 656, 226, 390), Rect2(1022, 656, 226, 390), Rect2(1282, 656, 226, 390)]
 
 var font: Font
 var background: Texture2D
 var art: Array[Texture2D] = []
 var displayed_cards: Array[Dictionary] = []
+var collection_cards: Array[Dictionary] = []
+var page := 0
 var time := 0.0
 var hovered := -1
 var selected := -1
@@ -32,14 +36,26 @@ func _ready() -> void:
 	set_process_input(true)
 
 func _build_display_cards() -> void:
-	displayed_cards.clear()
+	collection_cards.clear()
 	for card in GameState.hatched_cards:
-		displayed_cards.append(card.duplicate(true))
-	if displayed_cards.is_empty():
-		displayed_cards = GameState.build_battle_deck()
-	while displayed_cards.size() > CARD_RECTS.size():
-		displayed_cards.pop_back()
+		collection_cards.append(card.duplicate(true))
+	if collection_cards.is_empty():
+		collection_cards = GameState.build_battle_deck()
+	while collection_cards.size() > GameState.MAX_CARD_COLLECTION:
+		collection_cards.pop_back()
+	_refresh_page()
+
+func _page_count() -> int:
+	return max(1, int(ceil(float(collection_cards.size()) / float(CARD_RECTS.size()))))
+
+func _refresh_page() -> void:
+	displayed_cards.clear()
 	art.clear()
+	page = clampi(page, 0, _page_count() - 1)
+	var start: int = page * CARD_RECTS.size()
+	var finish: int = min(collection_cards.size(), start + CARD_RECTS.size())
+	for i in range(start, finish):
+		displayed_cards.append(collection_cards[i].duplicate(true))
 	for card in displayed_cards:
 		art.append(load(str(card.get("art", "res://picture/card20.png"))))
 
@@ -62,6 +78,16 @@ func _input(event: InputEvent) -> void:
 		if NAV_MAP.has_point(p): _leave("res://demon_realm.tscn")
 		elif NAV_HOME.has_point(p): _leave("res://cloud_roost.tscn")
 		elif NAV_BATTLE.has_point(p): _leave("res://battle.tscn")
+		elif PREV_PAGE_BUTTON.has_point(p):
+			page = max(0, page - 1)
+			selected = -1
+			hovered = -1
+			_refresh_page()
+		elif NEXT_PAGE_BUTTON.has_point(p):
+			page = min(_page_count() - 1, page + 1)
+			selected = -1
+			hovered = -1
+			_refresh_page()
 		elif GALLERY_BUTTON.has_point(p): _leave("res://asset_gallery.tscn")
 		else: selected = _card_at(p)
 		get_viewport().set_input_as_handled()
@@ -72,7 +98,7 @@ func _input(event: InputEvent) -> void:
 
 func _pointer(pointer: Vector2) -> Vector2:
 	var scaled: Vector2 = pointer * (VIEW / get_viewport_rect().size)
-	if _card_at(pointer) >= 0 or NAV_MAP.has_point(pointer) or NAV_HOME.has_point(pointer) or NAV_BATTLE.has_point(pointer): return pointer
+	if _card_at(pointer) >= 0 or NAV_MAP.has_point(pointer) or NAV_HOME.has_point(pointer) or NAV_BATTLE.has_point(pointer) or PREV_PAGE_BUTTON.has_point(pointer) or NEXT_PAGE_BUTTON.has_point(pointer): return pointer
 	return scaled
 
 func _card_at(point: Vector2) -> int:
@@ -90,7 +116,9 @@ func _draw() -> void:
 	_draw_nav()
 	_text("灵契图鉴", Vector2(62, 104), 48, Color("fff0c5"))
 	_text("已缔结 %d 张灵契 · 轻触卡牌查看攻击、防守与核心天赋" % displayed_cards.size(), Vector2(66, 164), 17, Color("cad8c6"))
+	_draw_pagination()
 	_draw_gallery_button()
+	_text("COLLECTION %d / %d  ·  PAGE %d / %d" % [collection_cards.size(), GameState.MAX_CARD_COLLECTION, page + 1, _page_count()], Vector2(66, 190), 15, Color("e8c982"))
 	for i in displayed_cards.size(): _draw_card(i)
 	if selected >= 0 and selected < displayed_cards.size(): _draw_inspector()
 	if destination != "": _draw_transition()
@@ -182,6 +210,15 @@ func _draw_gallery_button() -> void:
 	draw_rect(GALLERY_BUTTON, Color("203c3ee8"))
 	draw_rect(GALLERY_BUTTON, Color("d1a95d"), false, 1.0)
 	_text("万象素材馆  G", GALLERY_BUTTON.position + Vector2(0, 13), 17, Color("fff0c6"), HORIZONTAL_ALIGNMENT_CENTER, GALLERY_BUTTON.size.x)
+
+func _draw_pagination() -> void:
+	_page_button(PREV_PAGE_BUTTON, "‹ 上一页", page > 0)
+	_page_button(NEXT_PAGE_BUTTON, "下一页 ›", page < _page_count() - 1)
+	_text("第 %d / %d 页" % [page + 1, _page_count()], Vector2(1310, 160), 14, Color("c9baa0"), HORIZONTAL_ALIGNMENT_CENTER, 310)
+
+func _page_button(rect: Rect2, label: String, active: bool) -> void:
+	UISkin.panel(self, rect, Color("203c3ee8") if active else Color("131d22cc"), Color("d1a95d") if active else Color("56625d"), 14.0, 0.12, 4.0)
+	_text(label, rect.position + Vector2(0, 12), 16, Color("fff0c6") if active else Color("7f8b83"), HORIZONTAL_ALIGNMENT_CENTER, rect.size.x)
 
 func _text(value: String, pos: Vector2, size: int, color: Color, align := HORIZONTAL_ALIGNMENT_LEFT, width := -1.0) -> void:
 	var scaled_size: int = int(round(float(size) * GameState.ui_font_scale))

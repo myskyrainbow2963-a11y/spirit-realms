@@ -98,6 +98,24 @@ document.addEventListener('click',e=>{
   }
 });
 
+// Keep the browser collection aligned with the Godot cap of 100 cards.
+const collectionLimit = 100;
+const collectionLabelObserver = new MutationObserver(() => {
+  const heading = document.querySelector('.page-head h1');
+  const label = document.querySelector('.page-head p');
+  if (heading && label && document.querySelector('.card-grid')) {
+    const next = `已缔结 ${state.cards.length} / ${collectionLimit} 张灵契 · 可分页浏览`;
+    if (label.textContent !== next) label.textContent = next;
+  }
+});
+collectionLabelObserver.observe(game, {childList:true, subtree:true});
+document.addEventListener('click', e => {
+  const finishButton = e.target.closest('[data-action="finish"]');
+  if (!finishButton || state.cards.length < collectionLimit) return;
+  e.stopImmediatePropagation();
+  toast('灵契图鉴已满 100 张');
+}, true);
+
 /* Combat rules pass: five-card draws, discard/exhaust, transparent intent and statuses. */
 function cardCost(c){return c.skill==='magic'?2:c.skill==='intellect'?0:1}
 function isAttackCard(c){return ['strength','intellect','magic','spirit'].includes(c.skill)}

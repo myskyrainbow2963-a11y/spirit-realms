@@ -59,6 +59,11 @@ func _process(delta: float) -> void:
 		hatch_sequence += delta
 		_update_hatch_audio()
 		if hatch_sequence >= 2.15 and revealed_card.is_empty():
+			if GameState.hatched_cards.size() >= GameState.MAX_CARD_COLLECTION:
+				interaction_note = "灵契图鉴已满 100 张，无法继续收录新卡牌"
+				interaction_until = time + 4.0
+				hatch_sequence = -1.0
+				return
 			revealed_card = GameState.reveal_hatched_card()
 			revealed_texture = load(str(revealed_card.art))
 			AudioDirector.play_sfx("res://music/发射元素火焰强.mp3", -9.0, 1.06)
